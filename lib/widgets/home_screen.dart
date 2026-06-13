@@ -10,6 +10,7 @@ import 'package:expense_tracker/api_calls/expense_api.dart';
 import 'package:expense_tracker/widgets/expense_pie_chart.dart';
 import 'package:expense_tracker/widgets/expenses.dart';
 import 'package:expense_tracker/widgets/send_money_screen.dart';
+import 'package:expense_tracker/widgets/split_bill_hangout_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -211,7 +212,18 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 30),
           QuickActionsRow(
-            onSplitBill: widget.onSplitBill,
+            onSplitBill: () {
+              if (widget.onSplitBill != null) {
+                widget.onSplitBill!();
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const SplitBillHangoutScreen(),
+                  ),
+                );
+              }
+            },
             onSendMoney: () async {
               if (widget.onSendMoney != null) {
                 await widget.onSendMoney!();

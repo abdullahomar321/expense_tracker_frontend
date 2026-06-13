@@ -7,7 +7,14 @@ import '../api_calls/wallet_api.dart';
 import 'transaction_success_screen.dart';
 
 class SendMoneyScreen extends StatefulWidget {
-  const SendMoneyScreen({super.key});
+  const SendMoneyScreen({
+    super.key,
+    this.initialEmail,
+    this.initialAmount,
+  });
+
+  final String? initialEmail;
+  final double? initialAmount;
 
   @override
   State<SendMoneyScreen> createState() => _SendMoneyScreenState();
@@ -25,6 +32,9 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.initialAmount != null) {
+      _amountController.text = widget.initialAmount.toString();
+    }
     _fetchUsers();
   }
 
@@ -41,6 +51,16 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
         final usersList = response['users'] as List<dynamic>;
         setState(() {
           _users = usersList.map((e) => Map<String, dynamic>.from(e)).toList();
+          if (widget.initialEmail != null) {
+            try {
+              _selectedUser = _users.firstWhere((u) => u['email'] == widget.initialEmail);
+            } catch (_) {
+              _selectedUser = {
+                'email': widget.initialEmail,
+                'name': 'Pending Split User'
+              };
+            }
+          }
           _isLoadingUsers = false;
         });
       } else {
@@ -240,6 +260,7 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
               ),
               const SizedBox(height: 12),
               Autocomplete<Map<String, dynamic>>(
+                initialValue: TextEditingValue(text: widget.initialEmail ?? ''),
                 optionsBuilder: (TextEditingValue textEditingValue) {
                   if (textEditingValue.text.isEmpty) {
                     return const Iterable<Map<String, dynamic>>.empty();
