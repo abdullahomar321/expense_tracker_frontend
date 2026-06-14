@@ -701,7 +701,24 @@ class _ExpensesState extends State<Expenses> {
     setState(() => _isSubmitting = false);
 
     if (response['success']) {
-      // Always reload expenses from server to get accurate balance and spent totals
+      // Update balance immediately from response if available
+      final provider = context.read<UserProvider>();
+      final responseData = response['data'];
+
+      if (responseData != null) {
+        final balanceVal = responseData['balance'] ?? responseData['new_balance'];
+        if (balanceVal != null) {
+          double updatedBalance = 0;
+          if (balanceVal is num) {
+            updatedBalance = balanceVal.toDouble();
+          } else if (balanceVal is String) {
+            updatedBalance = double.tryParse(balanceVal) ?? 0;
+          }
+          provider.updateBalance(updatedBalance);
+        }
+      }
+
+      // Also reload expenses from server to get accurate balance and spent totals
       await _loadExpenses();
 
       _expenseNameController.clear();
@@ -767,7 +784,24 @@ class _ExpensesState extends State<Expenses> {
     setState(() => _isSubmitting = false);
 
     if (response['success']) {
-      // Always reload expenses from server to get accurate balance and spent totals
+      // Update balance immediately from response if available
+      final provider = context.read<UserProvider>();
+      final responseData = response['data'];
+
+      if (responseData != null) {
+        final balanceVal = responseData['balance'] ?? responseData['new_balance'];
+        if (balanceVal != null) {
+          double updatedBalance = 0;
+          if (balanceVal is num) {
+            updatedBalance = balanceVal.toDouble();
+          } else if (balanceVal is String) {
+            updatedBalance = double.tryParse(balanceVal) ?? 0;
+          }
+          provider.updateBalance(updatedBalance);
+        }
+      }
+
+      // Also reload expenses from server to get accurate balance and spent totals
       await _loadExpenses();
 
       Navigator.pop(context);
@@ -809,7 +843,24 @@ class _ExpensesState extends State<Expenses> {
     if (!mounted) return;
 
     if (response['success']) {
-      // Always reload expenses from server to get accurate balance and spent totals
+      // Update balance immediately from response if available
+      final provider = context.read<UserProvider>();
+      final responseData = response['data'];
+
+      if (responseData != null) {
+        final balanceVal = responseData['balance'] ?? responseData['new_balance'];
+        if (balanceVal != null) {
+          double updatedBalance = 0;
+          if (balanceVal is num) {
+            updatedBalance = balanceVal.toDouble();
+          } else if (balanceVal is String) {
+            updatedBalance = double.tryParse(balanceVal) ?? 0;
+          }
+          provider.updateBalance(updatedBalance);
+        }
+      }
+
+      // Also reload expenses from server to get accurate balance and spent totals
       await _loadExpenses();
 
       ScaffoldMessenger.of(context).showSnackBar(

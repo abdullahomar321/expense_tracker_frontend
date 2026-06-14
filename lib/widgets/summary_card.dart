@@ -93,7 +93,7 @@ class SummaryCard extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             _SummaryRow(
-              label: 'Budget',
+             label: 'Balance',
               value: _formatAmount(budget),
               valueColor: _titleColor,
             ),
@@ -102,12 +102,6 @@ class SummaryCard extends StatelessWidget {
               label: 'Spent',
               value: _formatAmount(spent),
               valueColor: _spentColor,
-            ),
-            const SizedBox(height: 16),
-            _SummaryRow(
-              label: 'Remaining',
-              value: _formatAmount(_remaining),
-              valueColor: _remainingColor,
             ),
             const SizedBox(height: 24),
             ClipRRect(
