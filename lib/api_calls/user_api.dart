@@ -6,14 +6,18 @@ import 'package:http/http.dart' as http;
 class UserProfileResult {
   const UserProfileResult({
     required this.success,
+    this.userId,
     this.name,
     this.email,
+    this.photoUrl,
     this.balance = 0,
   });
 
   final bool success;
+  final String? userId;
   final String? name;
   final String? email;
+  final String? photoUrl;
   final double balance;
 }
 
@@ -41,8 +45,10 @@ class UserApi {
 
         return UserProfileResult(
           success: true,
+          userId: _readString(user['id']?.toString()),
           name: _readString(user['name']),
           email: _readString(user['email']),
+          photoUrl: _readString(user['photo_url'] ?? user['avatar']),
           balance: ApiResponseParser.readBalance(user),
         );
       }

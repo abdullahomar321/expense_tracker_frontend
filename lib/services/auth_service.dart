@@ -4,6 +4,7 @@ import 'package:expense_tracker/api_calls/logout_api.dart';
 import 'package:expense_tracker/api_calls/premium_api.dart';
 import 'package:expense_tracker/api_calls/user_api.dart';
 import 'package:expense_tracker/providers/user_provider.dart';
+import 'package:expense_tracker/services/firestore_sync_service.dart';
 import 'package:expense_tracker/services/secure_token_storage.dart';
 
 class AuthService {
@@ -21,6 +22,7 @@ class AuthService {
     await LogoutApi.logout(); // revokes Sanctum token server-side
     await SecureTokenStorage.deleteToken();
     await SecureTokenStorage.deleteGeminiKey();
+    await FirestoreSyncService.clearLocalUserId();
   }
 
   static Future<bool> restoreSession(UserProvider userProvider) async {
@@ -62,6 +64,8 @@ class AuthService {
       name: profile.name ?? 'User',
       email: profile.email ?? '',
       totalIncome: profile.balance,
+      userId: profile.userId,
+      photoUrl: profile.photoUrl ?? '',
       isPremium: isPremium,
     );
 
@@ -88,6 +92,16 @@ class AuthService {
         }
         userProvider.updateBalance(parsedBalance);
       }
+    }
+
+    // Sync user to Firestore fire-and-forget
+    if (profile.userId != null && profile.userId!.isNotEmpty) {
+      FirestoreSyncService.syncUser(
+        userId: profile.userId!,
+        displayName: profile.name ?? 'User',
+        email: profile.email ?? '',
+        photoUrl: profile.photoUrl ?? '',
+      );
     }
 
     return true;

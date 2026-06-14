@@ -4,6 +4,8 @@ import 'package:expense_tracker/UI/options.dart';
 import 'package:expense_tracker/providers/splash_provider.dart';
 import 'package:expense_tracker/providers/user_provider.dart';
 import 'package:expense_tracker/services/auth_service.dart';
+import 'package:expense_tracker/services/pin_service.dart';
+import 'package:expense_tracker/widgets/pin_auth_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -46,6 +48,17 @@ class _AppStartupState extends State<AppStartup> {
             }
 
             if (snapshot.data == true) {
+              if (PinService.hasPin()) {
+                return PinAuthScreen(
+                  mode: PinAuthMode.verify,
+                  onSuccess: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const Dashboard()),
+                    );
+                  },
+                );
+              }
               return const Dashboard();
             }
 

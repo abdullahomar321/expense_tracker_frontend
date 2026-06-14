@@ -50,76 +50,91 @@ class SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              const Text(
-                'Summary',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: _titleColor,
-                  letterSpacing: -0.3,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                const Text(
+                  'Summary',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: _titleColor,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                Text(
+                  periodLabel ?? _currentPeriodLabel(),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: _labelColor,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            _SummaryRow(
+              label: 'Budget',
+              value: _formatAmount(budget),
+              valueColor: _titleColor,
+            ),
+            const SizedBox(height: 16),
+            _SummaryRow(
+              label: 'Spent',
+              value: _formatAmount(spent),
+              valueColor: _spentColor,
+            ),
+            const SizedBox(height: 16),
+            _SummaryRow(
+              label: 'Remaining',
+              value: _formatAmount(_remaining),
+              valueColor: _remainingColor,
+            ),
+            const SizedBox(height: 24),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(100),
+              child: SizedBox(
+                height: 8,
+                child: LinearProgressIndicator(
+                  value: _usedFraction,
+                  backgroundColor: _trackColor,
+                  color: _usedFraction > 0.45 ? _spentColor : _remainingColor,
                 ),
               ),
-              Text(
-                periodLabel ?? _currentPeriodLabel(),
+            ),
+            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                '$_usedPercent% used',
                 style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: FontWeight.w400,
                   color: _labelColor,
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          _SummaryRow(
-            label: 'Budget',
-            value: _formatAmount(budget),
-            valueColor: _titleColor,
-          ),
-          const SizedBox(height: 16),
-          _SummaryRow(
-            label: 'Spent',
-            value: _formatAmount(spent),
-            valueColor: _spentColor,
-          ),
-          const SizedBox(height: 16),
-          _SummaryRow(
-            label: 'Remaining',
-            value: _formatAmount(_remaining),
-            valueColor: _remainingColor,
-          ),
-          const SizedBox(height: 24),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(100),
-            child: SizedBox(
-              height: 8,
-              child: LinearProgressIndicator(
-                value: _usedFraction,
-                backgroundColor: _trackColor,
-                color: _usedFraction > 0.45 ? _spentColor : _remainingColor,
-              ),
             ),
-          ),
-          const SizedBox(height: 10),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              '$_usedPercent% used',
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w400,
-                color: _labelColor,
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

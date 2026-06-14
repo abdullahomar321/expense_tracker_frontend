@@ -39,7 +39,7 @@ class QuickActionsRow extends StatelessWidget {
             child: _QuickActionItem(
               icon: Icons.add_circle_outline,
               label: 'Enter Expenses',
-              onTap: () {
+              onTap: onEnterExpenses ?? () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(

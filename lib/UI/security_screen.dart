@@ -1,6 +1,9 @@
 import 'package:expense_tracker/UI/change_password_screen.dart';
 import 'package:flutter/material.dart';
 
+import 'package:expense_tracker/services/pin_service.dart';
+import 'package:expense_tracker/widgets/pin_auth_screen.dart';
+
 class SecurityScreen extends StatefulWidget {
   const SecurityScreen({super.key});
 
@@ -10,6 +13,12 @@ class SecurityScreen extends StatefulWidget {
 
 class _SecurityScreenState extends State<SecurityScreen> {
   bool _pinLoginEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _pinLoginEnabled = PinService.hasPin();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,8 +70,21 @@ class _SecurityScreenState extends State<SecurityScreen> {
                 children: [
                   _PinLoginTile(
                     value: _pinLoginEnabled,
-                    onChanged: (value) {
-                      setState(() => _pinLoginEnabled = value);
+                    onChanged: (value) async {
+                      if (value) {
+                        final success = await Navigator.push<bool>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const PinAuthScreen(mode: PinAuthMode.setup),
+                          ),
+                        );
+                        if (success == true) {
+                          setState(() => _pinLoginEnabled = true);
+                        }
+                      } else {
+                        await PinService.removePin();
+                        setState(() => _pinLoginEnabled = false);
+                      }
                     },
                   ),
                   const Padding(

@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 
 class UserProvider extends ChangeNotifier {
+  String _userId = '';
   String _name = '';
   String _email = '';
+  String _photoUrl = '';
   double _balance = 0;
   double _totalIncome = 0;
   double _spent = 0;
   bool _isLoggedIn = false;
   bool _isPremium = false;
 
+  String get userId => _userId;
   String get name => _name;
   String get email => _email;
+  String get photoUrl => _photoUrl;
   double get balance => _balance;
   double get totalIncome => _totalIncome;
   double get spent => _spent;
@@ -21,10 +25,14 @@ class UserProvider extends ChangeNotifier {
     required String name,
     required String email,
     required double totalIncome,
+    String? userId,
+    String? photoUrl,
     bool? isPremium,
   }) {
+    if (userId != null && userId.isNotEmpty) _userId = userId;
     _name = name;
     _email = email;
+    if (photoUrl != null) _photoUrl = photoUrl;
     _balance = totalIncome;
     _totalIncome = totalIncome;
     _spent = 0;
@@ -56,8 +64,10 @@ class UserProvider extends ChangeNotifier {
   }
 
   void logout() {
+    _userId = '';
     _name = '';
     _email = '';
+    _photoUrl = '';
     _balance = 0;
     _totalIncome = 0;
     _spent = 0;

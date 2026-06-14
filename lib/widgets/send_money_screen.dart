@@ -393,6 +393,16 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
                   contentPadding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
                 ),
               ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  _buildQuickAmount(20),
+                  const SizedBox(width: 12),
+                  _buildQuickAmount(75),
+                  const SizedBox(width: 12),
+                  _buildQuickAmount(100),
+                ],
+              ),
               const SizedBox(height: 24),
               
               // Note
@@ -451,6 +461,37 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
               ),
               const SizedBox(height: 20),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickAmount(int amount) {
+    return Expanded(
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            _amountController.text = amount.toString();
+          });
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: Center(
+            child: Text(
+              '\$$amount',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF10B981),
+              ),
+            ),
           ),
         ),
       ),

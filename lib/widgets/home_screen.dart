@@ -362,10 +362,12 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 12),
           // Circular Progress Indicator (Donut Chart) for Expenses Overview
           if (_isLoadingExpenses)
-            const Padding(
-              padding: EdgeInsets.all(24.0),
-              child: Center(child: CircularProgressIndicator(color: Color(0xFF10B981))),
-            )
+            _isLoadingHistory
+                ? const SizedBox.shrink()
+                : const Padding(
+                    padding: EdgeInsets.all(24.0),
+                    child: Center(child: CircularProgressIndicator(color: Color(0xFF10B981))),
+                  )
           else
             ExpensePieChart(expenses: _expenses),
           const SizedBox(height: 40),

@@ -6,10 +6,22 @@ import 'package:expense_tracker/providers/splash_provider.dart';
 import 'package:expense_tracker/providers/user_provider.dart';
 import 'package:expense_tracker/api_calls/stripe_config.dart';
 import 'package:expense_tracker/api_calls/payment_api.dart';
+import 'package:expense_tracker/services/pin_service.dart';
+import 'package:expense_tracker/widgets/pin_auth_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'firebase_options.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  await Hive.initFlutter();
+  await Hive.openBox('settings');
+  
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   // Initialize Stripe with publishable key from config
   Stripe.publishableKey = StripeConfig.publishableKey;
 
@@ -42,12 +54,46 @@ Future<void> _fetchStripeKey() async {
   }
 }
 
-class Expensetracker extends StatelessWidget {
+class Expensetracker extends StatefulWidget {
   const Expensetracker({super.key});
+
+  @override
+  State<Expensetracker> createState() => _ExpensetrackerState();
+}
+
+class _ExpensetrackerState extends State<Expensetracker> with WidgetsBindingObserver {
+  
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      PinService.recordBackgroundTime();
+    } else if (state == AppLifecycleState.resumed) {
+      if (PinService.shouldPromptPin()) {
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(
+            builder: (_) => const PinAuthScreen(mode: PinAuthMode.verify),
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       home: const AppStartup(),
     );

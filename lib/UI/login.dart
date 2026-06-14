@@ -7,6 +7,7 @@ import 'package:expense_tracker/api_calls/premium_api.dart';
 import 'package:expense_tracker/api_calls/user_api.dart';
 import 'package:expense_tracker/providers/user_provider.dart';
 import 'package:expense_tracker/services/auth_service.dart';
+import 'package:expense_tracker/services/firestore_sync_service.dart';
 import 'package:expense_tracker/utils/auth_validators.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -96,8 +97,20 @@ class _LoginState extends State<Login> {
           name: userName.isNotEmpty ? userName : 'User',
           email: userEmail,
           totalIncome: userBalance,
+          userId: result.userId,
+          photoUrl: result.photoUrl ?? '',
           isPremium: false,
         );
+
+    // Sync user profile to Firestore fire-and-forget (no UI block)
+    if (result.userId != null && result.userId!.isNotEmpty) {
+      FirestoreSyncService.syncUser(
+        userId: result.userId!,
+        displayName: userName.isNotEmpty ? userName : 'User',
+        email: userEmail,
+        photoUrl: result.photoUrl ?? '',
+      );
+    }
 
     // Navigate to dashboard immediately without blocking
     Navigator.pushReplacement(

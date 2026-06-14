@@ -3,6 +3,7 @@ import 'package:expense_tracker/widgets/split_bill_receipt_screen.dart';
 import 'package:expense_tracker/api_calls/wallet_api.dart';
 import 'package:expense_tracker/api_calls/hangout_api.dart';
 import 'package:expense_tracker/services/secure_token_storage.dart';
+import 'package:expense_tracker/widgets/chat/chat_list_screen.dart';
 
 class SplitBillHangoutScreen extends StatefulWidget {
   const SplitBillHangoutScreen({super.key});
@@ -141,6 +142,17 @@ class _SplitBillHangoutScreenState extends State<SplitBillHangoutScreen> {
           icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFF10B981)),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const ChatListScreen(),
+              ),
+            ),
+            icon: const Icon(Icons.wechat_outlined,color: Colors.green,),
+          )
+        ],
         title: const Text(
           'Split a Bill',
           style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold),

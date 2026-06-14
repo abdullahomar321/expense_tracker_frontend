@@ -6,8 +6,10 @@ class SecureTokenStorage {
 
   static const _tokenKey = 'sanctum_token';
   static const _geminiKey = 'gemini_api_key';
+  static const _userIdKey = 'laravel_user_id';
   static String? _memoryToken;
   static String? _memoryGeminiKey;
+  static String? _memoryUserId;
 
   static const FlutterSecureStorage _storage = FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
@@ -109,6 +111,30 @@ class SecureTokenStorage {
           await file.delete();
         }
       } catch (_) {}
+    }
+  }
+
+  static Future<void> saveUserId(String userId) async {
+    try {
+      await _storage.write(key: _userIdKey, value: userId);
+    } catch (_) {
+      _memoryUserId = userId;
+    }
+  }
+
+  static Future<String?> getUserId() async {
+    try {
+      return await _storage.read(key: _userIdKey);
+    } catch (_) {
+      return _memoryUserId;
+    }
+  }
+
+  static Future<void> deleteUserId() async {
+    try {
+      await _storage.delete(key: _userIdKey);
+    } catch (_) {
+      _memoryUserId = null;
     }
   }
 }

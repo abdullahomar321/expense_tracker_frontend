@@ -19,8 +19,10 @@ class LoginResult {
     required this.message,
     this.errorType = LoginErrorType.none,
     this.token,
+    this.userId,
     this.name,
     this.email,
+    this.photoUrl,
     this.balance = 0,
   });
 
@@ -28,8 +30,10 @@ class LoginResult {
   final String message;
   final LoginErrorType errorType;
   final String? token;
+  final String? userId;
   final String? name;
   final String? email;
+  final String? photoUrl;
   final double balance;
 }
 
@@ -83,8 +87,10 @@ class LoginApi {
           success: true,
           message: body['message'] ?? 'Login successful',
           token: token,
+          userId: user['id']?.toString(),
           name: user['name'],
           email: user['email'] ?? email,
+          photoUrl: user['photo_url']?.toString() ?? user['avatar']?.toString(),
           balance: balance,
         );
       }
