@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:expense_tracker/api_calls/payment_api.dart';
 import 'package:expense_tracker/api_calls/premium_api.dart';
 import 'package:expense_tracker/api_calls/stripe_config.dart';
 import 'package:expense_tracker/providers/user_provider.dart';
 import 'package:expense_tracker/services/secure_token_storage.dart';
+import 'package:expense_tracker/services/pin_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:provider/provider.dart';
@@ -44,6 +46,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     _expiryController.dispose();
     _cvvController.dispose();
     _postalCodeController.dispose();
+    PinService.resetPaymentFlag();
     super.dispose();
   }
 
@@ -85,6 +88,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     if (!_validateCard()) return;
 
     setState(() => _isLoading = true);
+    PinService.markPaymentInProgress();
 
     try {
       // Step 1: Create Payment Intent
@@ -100,6 +104,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           _isLoading = false;
           _errorMessage = createResponse['message'] ?? 'Unable to start payment';
         });
+        PinService.resetPaymentFlag();
         return;
       }
 
@@ -111,6 +116,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           _isLoading = false;
           _errorMessage = 'Payment setup failed. Please try again.';
         });
+        PinService.resetPaymentFlag();
         return;
       }
 
@@ -145,7 +151,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         paymentIntentId: paymentIntentId,
       );
 
-      if (!mounted) return;
+      if (!mounted) {
+        PinService.resetPaymentFlag();
+        return;
+      }
 
       // Step 4: Check success
       if (confirmResponse['success'] == true) {
@@ -163,6 +172,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             _errorMessage = confirmResponse['message'] ??
                 'Payment successful but premium not activated. Please contact support.';
           });
+          PinService.resetPaymentFlag();
           return;
         }
       }
@@ -171,54 +181,92 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         _isLoading = false;
         _errorMessage = confirmResponse['message'] ?? 'Payment confirmation failed';
       });
+      PinService.resetPaymentFlag();
     } on StripeException catch (error) {
-      if (!mounted) return;
+      if (!mounted) {
+        PinService.resetPaymentFlag();
+        return;
+      }
       setState(() {
         _isLoading = false;
         _errorMessage = error.error.localizedMessage ?? 'Payment failed';
       });
+      PinService.resetPaymentFlag();
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted) {
+        PinService.resetPaymentFlag();
+        return;
+      }
       setState(() {
         _isLoading = false;
         _errorMessage = error.toString();
       });
+      PinService.resetPaymentFlag();
     }
   }
 
   Future<bool> _verifyPremiumAndNavigate() async {
-    final apiKey = await PremiumApi.getGeminiApiKey();
-    if (apiKey != null && apiKey.isNotEmpty) {
-      await SecureTokenStorage.saveGeminiKey(apiKey);
-    }
+    try {
+      // Add 15-second timeout to prevent stuck loading
+      final apiKey = await PremiumApi.getGeminiApiKey()
+          .timeout(const Duration(seconds: 15));
+      if (apiKey != null && apiKey.isNotEmpty) {
+        await SecureTokenStorage.saveGeminiKey(apiKey);
+      }
 
-    final premiumStatus = await PremiumApi.getPremiumStatus();
-    if (!mounted) return false;
+      final premiumStatus = await PremiumApi.getPremiumStatus()
+          .timeout(const Duration(seconds: 15));
 
-    if (!(premiumStatus.success && premiumStatus.isPremium)) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = premiumStatus.message.isNotEmpty
-            ? premiumStatus.message
-            : 'Premium access could not be verified';
-      });
+      if (!mounted) {
+        PinService.resetPaymentFlag();
+        return false;
+      }
+
+      if (!(premiumStatus.success && premiumStatus.isPremium)) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = premiumStatus.message.isNotEmpty
+              ? premiumStatus.message
+              : 'Premium access could not be verified';
+        });
+        PinService.resetPaymentFlag();
+        return false;
+      }
+
+      context.read<UserProvider>().setPremium(true);
+
+      if (mounted) {
+        PinService.resetPaymentFlag();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('🎉 Welcome to Premium! AI ChatBot unlocked.'),
+            backgroundColor: _accent,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+        Navigator.of(context).pop(true);
+      }
+      return true;
+    } on TimeoutException {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Verification timeout. Please try again or check your connection.';
+        });
+      }
+      PinService.resetPaymentFlag();
+      return false;
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Error verifying premium: $e';
+        });
+      }
+      PinService.resetPaymentFlag();
       return false;
     }
-
-    context.read<UserProvider>().setPremium(true);
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('🎉 Welcome to Premium! AI ChatBot unlocked.'),
-          backgroundColor: _accent,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
-      Navigator.of(context).pop(true);
-    }
-    return true;
   }
 
   @override

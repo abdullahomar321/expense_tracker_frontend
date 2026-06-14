@@ -22,13 +22,9 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  // Initialize Stripe with publishable key from config
+
   Stripe.publishableKey = StripeConfig.publishableKey;
-
-  // Optionally fetch the latest publishable key from backend
-  // This is useful if you rotate keys on the server
   _fetchStripeKey();
-
   runApp(
     MultiProvider(
       providers: [

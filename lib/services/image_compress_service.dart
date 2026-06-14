@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:expense_tracker/services/pin_service.dart';
 
 /// Handles image picking, compression, and base64 encoding for chat.
 class ImageCompressService {
@@ -63,6 +64,9 @@ class ImageCompressService {
     required void Function(String message) onError,
   }) async {
     ImageSource? chosenSource;
+
+    // Mark picker as opened to prevent PIN prompts
+    PinService.markPickerOpened();
 
     await showModalBottomSheet<void>(
       context: context,

@@ -89,6 +89,8 @@ class _HomeScreenState extends State<HomeScreen> {
           totalSpent += parsedAmt;
         }
         context.read<UserProvider>().updateSpent(totalSpent);
+
+        // Get balance from API
         final balance = response['balance'];
         if (balance != null) {
           double newBalance = 0;
@@ -98,6 +100,26 @@ class _HomeScreenState extends State<HomeScreen> {
             newBalance = double.tryParse(balance) ?? 0;
           }
           context.read<UserProvider>().updateBalance(newBalance);
+        }
+
+        // Try to get total income from server response
+        final totalIncome = response['total_income'] ?? response['totalIncome'];
+        if (totalIncome != null) {
+          double parsedTotalIncome = 0;
+          if (totalIncome is num) {
+            parsedTotalIncome = totalIncome.toDouble();
+          } else if (totalIncome is String) {
+            parsedTotalIncome = double.tryParse(totalIncome) ?? 0;
+          }
+          context.read<UserProvider>().updateTotalIncome(parsedTotalIncome);
+        } else if (balance != null) {
+          // Fallback: calculate totalIncome = balance + spent
+          double newBalance = 0;
+          if (balance is num) {
+            newBalance = balance.toDouble();
+          } else if (balance is String) {
+            newBalance = double.tryParse(balance) ?? 0;
+          }
           context.read<UserProvider>().updateTotalIncome(newBalance + totalSpent);
         }
       } else {

@@ -168,6 +168,28 @@ class _LoginState extends State<Login> {
             }
           }
           userProvider.updateSpent(totalSpent);
+
+          // Try to get total income from server response
+          final totalIncomeFromServer = result['total_income'] ?? result['totalIncome'];
+          if (totalIncomeFromServer != null) {
+            double parsedTotalIncome = 0;
+            if (totalIncomeFromServer is num) {
+              parsedTotalIncome = totalIncomeFromServer.toDouble();
+            } else if (totalIncomeFromServer is String) {
+              parsedTotalIncome = double.tryParse(totalIncomeFromServer) ?? 0;
+            }
+            userProvider.updateTotalIncome(parsedTotalIncome);
+          } else {
+            // Fallback: calculate from balance + spent
+            double balanceVal = 0;
+            final balance = result['balance'];
+            if (balance is num) {
+              balanceVal = balance.toDouble();
+            } else if (balance is String) {
+              balanceVal = double.tryParse(balance) ?? 0;
+            }
+            userProvider.updateTotalIncome(balanceVal + totalSpent);
+          }
         }
       }
     }).catchError((_) {});

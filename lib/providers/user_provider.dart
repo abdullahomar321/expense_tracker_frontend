@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/services/pin_service.dart';
 
 class UserProvider extends ChangeNotifier {
   String _userId = '';
@@ -29,7 +30,11 @@ class UserProvider extends ChangeNotifier {
     String? photoUrl,
     bool? isPremium,
   }) {
-    if (userId != null && userId.isNotEmpty) _userId = userId;
+    if (userId != null && userId.isNotEmpty) {
+      _userId = userId;
+      // Set current user in PIN service for user-specific PIN handling
+      PinService.setCurrentUserId(userId);
+    }
     _name = name;
     _email = email;
     if (photoUrl != null) _photoUrl = photoUrl;
@@ -64,6 +69,9 @@ class UserProvider extends ChangeNotifier {
   }
 
   void logout() {
+    // Clear current user from PIN service
+    PinService.clearCurrentUserId();
+
     _userId = '';
     _name = '';
     _email = '';

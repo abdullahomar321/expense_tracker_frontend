@@ -5,6 +5,7 @@ import 'package:expense_tracker/api_calls/premium_api.dart';
 import 'package:expense_tracker/api_calls/user_api.dart';
 import 'package:expense_tracker/providers/user_provider.dart';
 import 'package:expense_tracker/services/firestore_sync_service.dart';
+import 'package:expense_tracker/services/pin_service.dart';
 import 'package:expense_tracker/services/secure_token_storage.dart';
 
 class AuthService {
@@ -18,6 +19,9 @@ class AuthService {
   }
 
   static Future<void> clearSession() async {
+    // Clear current user from PIN service
+    PinService.clearCurrentUserId();
+
     // Always delete local token — server revocation is best-effort
     await LogoutApi.logout(); // revokes Sanctum token server-side
     await SecureTokenStorage.deleteToken();
@@ -45,6 +49,11 @@ class AuthService {
     if (!profile.success) {
       await SecureTokenStorage.deleteToken();
       return false;
+    }
+
+    // Set current user in PIN service (for user-specific PIN handling)
+    if (profile.userId != null && profile.userId!.isNotEmpty) {
+      PinService.setCurrentUserId(profile.userId!);
     }
 
     final isPremium = premiumStatus.success && premiumStatus.isPremium;
@@ -91,6 +100,21 @@ class AuthService {
           parsedBalance = double.tryParse(balance) ?? profile.balance;
         }
         userProvider.updateBalance(parsedBalance);
+      }
+
+      // Try to get total income from server response
+      final totalIncomeFromServer = expenseData['total_income'] ?? expenseData['totalIncome'];
+      if (totalIncomeFromServer != null) {
+        double parsedTotalIncome = 0;
+        if (totalIncomeFromServer is num) {
+          parsedTotalIncome = totalIncomeFromServer.toDouble();
+        } else if (totalIncomeFromServer is String) {
+          parsedTotalIncome = double.tryParse(totalIncomeFromServer) ?? 0;
+        }
+        userProvider.updateTotalIncome(parsedTotalIncome);
+      } else {
+        // Fallback: use profile balance as totalIncome (on initial login)
+        userProvider.updateTotalIncome(profile.balance);
       }
     }
 

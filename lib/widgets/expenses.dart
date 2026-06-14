@@ -314,7 +314,7 @@ class _ExpensesState extends State<Expenses> {
       );
       context.read<UserProvider>().updateSpent(totalSpent);
 
-      // Update balance from API
+      // Update balance and total income from API
       final balance = response['balance'];
       if (balance != null) {
         double newBalance = 0;
@@ -324,6 +324,26 @@ class _ExpensesState extends State<Expenses> {
           newBalance = double.tryParse(balance) ?? 0;
         }
         context.read<UserProvider>().updateBalance(newBalance);
+      }
+
+      // Try to get total income from server response
+      final totalIncome = response['total_income'] ?? response['totalIncome'];
+      if (totalIncome != null) {
+        double parsedTotalIncome = 0;
+        if (totalIncome is num) {
+          parsedTotalIncome = totalIncome.toDouble();
+        } else if (totalIncome is String) {
+          parsedTotalIncome = double.tryParse(totalIncome) ?? 0;
+        }
+        context.read<UserProvider>().updateTotalIncome(parsedTotalIncome);
+      } else if (balance != null) {
+        // Fallback: calculate totalIncome = balance + spent
+        double newBalance = 0;
+        if (balance is num) {
+          newBalance = balance.toDouble();
+        } else if (balance is String) {
+          newBalance = double.tryParse(balance) ?? 0;
+        }
         context.read<UserProvider>().updateTotalIncome(newBalance + totalSpent);
       }
     } else {
@@ -434,20 +454,34 @@ class _ExpensesState extends State<Expenses> {
 
       final provider = context.read<UserProvider>();
 
+   // Get the server response data
       final data = response['data'];
       if (data != null) {
-        final balanceVal = data['new_balance'] ?? data['balance'] ?? data['total_income'] ?? data['totalIncome'];
-        if (balanceVal != null) {
-          double serverBalance = amount;
-          if (balanceVal is num) {
-            serverBalance = balanceVal.toDouble();
-          } else if (balanceVal is String) {
-            serverBalance = double.tryParse(balanceVal) ?? amount;
+        // Prefer new_balance from server, which is the actual calculated balance
+        final newBalanceVal = data['new_balance'] ?? data['balance'];
+        final newTotalIncomeVal = data['total_income'] ?? data['totalIncome'];
+
+        if (newBalanceVal != null) {
+          double serverBalance = 0;
+          if (newBalanceVal is num) {
+            serverBalance = newBalanceVal.toDouble();
+          } else if (newBalanceVal is String) {
+            serverBalance = double.tryParse(newBalanceVal) ?? 0;
           }
           provider.updateBalance(serverBalance);
-          provider.updateTotalIncome(serverBalance + provider.spent);
+        }
+
+        if (newTotalIncomeVal != null) {
+          double totalIncome = 0;
+          if (newTotalIncomeVal is num) {
+            totalIncome = newTotalIncomeVal.toDouble();
+          } else if (newTotalIncomeVal is String) {
+            totalIncome = double.tryParse(newTotalIncomeVal) ?? 0;
+          }
+          provider.updateTotalIncome(totalIncome);
         }
       } else {
+        // Fallback: add amount to existing balance and total income
         provider.updateBalance(provider.balance + amount);
         provider.updateTotalIncome(provider.totalIncome + amount);
       }
@@ -667,12 +701,7 @@ class _ExpensesState extends State<Expenses> {
     setState(() => _isSubmitting = false);
 
     if (response['success']) {
-      final double newBalance = userProvider.balance - amount;
-      final double newSpent = userProvider.spent + amount;
-      userProvider.updateBalance(newBalance);
-      userProvider.updateSpent(newSpent);
-
-      // Reload expenses from server
+      // Always reload expenses from server to get accurate balance and spent totals
       await _loadExpenses();
 
       _expenseNameController.clear();
@@ -738,16 +767,7 @@ class _ExpensesState extends State<Expenses> {
     setState(() => _isSubmitting = false);
 
     if (response['success']) {
-      final userProvider = context.read<UserProvider>();
-
-      // Adjust balance based on amount difference
-      final amountDiff = newAmount - oldAmount;
-      final double newBalance = userProvider.balance - amountDiff;
-      final double newSpent = userProvider.spent + amountDiff;
-      userProvider.updateBalance(newBalance);
-      userProvider.updateSpent(newSpent);
-
-      // Reload expenses from server
+      // Always reload expenses from server to get accurate balance and spent totals
       await _loadExpenses();
 
       Navigator.pop(context);
@@ -789,17 +809,8 @@ class _ExpensesState extends State<Expenses> {
     if (!mounted) return;
 
     if (response['success']) {
-      // Update local balance
-      final amount = _parseAmount(expense['amount']);
-      final userProvider = context.read<UserProvider>();
-      final double newBalance = userProvider.balance + amount;
-      final double newSpent = userProvider.spent - amount;
-      userProvider.updateBalance(newBalance);
-      userProvider.updateSpent(newSpent < 0 ? 0 : newSpent);
-
-      setState(() {
-        _expenses.removeWhere((e) => e['id'] == expenseId);
-      });
+      // Always reload expenses from server to get accurate balance and spent totals
+      await _loadExpenses();
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Expense deleted!")),
